@@ -8,11 +8,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(THIRDPARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/3rd)
-set(OPENCV3_INSTALL_DIR ${CMAKE_BINARY_DIR}/opencv3)
-set(OPENCV3_DIR ${THIRDPARTY_DIR}/opencv3)
+set(OPENCV_INSTALL_DIR ${CMAKE_BINARY_DIR}/opencv)
+set(OPENCV_DIR ${THIRDPARTY_DIR}/opencv)
 
-ExternalProject_Add(opencv3
-		SOURCE_DIR ${OPENCV3_DIR}
+ExternalProject_Add(opencv
+                SOURCE_DIR ${OPENCV3_DIR}
 		CMAKE_ARGS
 		-DCMAKE_CXX_FLAGS=${CXX_OPT_FLAGS}
 		-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
@@ -80,8 +80,11 @@ ExternalProject_Add(opencv3
 		-DWITH_PTHREADS_PF=OFF
 		-DWITH_OPENMP=OFF
 		-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-                -DCMAKE_INSTALL_PREFIX:PATH=${OPENCV3_INSTALL_DIR}
-		BUILD_BYPRODUCTS ${OPENCV3_LIBS}
+                -DCMAKE_INSTALL_PREFIX:PATH=${OPENCV_INSTALL_DIR}
+                BUILD_BYPRODUCTS ${OPENCV_LIBS}
+                GIT_TAG 4.1.2
+                GIT_REPOSITORY https://github.com/opencv/opencv.git
+                GIT_PROGRESS ON
 		)
 
 add_library(LibCam
@@ -89,5 +92,6 @@ add_library(LibCam
     ${CMAKE_CURRENT_LIST_DIR}/src/LongExposure.cpp
     )
 
-target_include_directories(LibCam PUBLIC ${OPENCV3_INSTALL_DIR}/include/opencv4)
+target_include_directories(LibCam PUBLIC ${OPENCV_INSTALL_DIR}/include/opencv4)
 target_link_libraries(LibCam opencv_world)
+add_dependencies(LibCam opencv)
