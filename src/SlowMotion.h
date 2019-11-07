@@ -12,7 +12,7 @@ class SlowMotion
 private:
 
 public:
-    std::vector<cv::Mat> interpolatedFrame(cv::Mat previous_frame, cv::Mat next_frame, int frame_count);
+    std::vector<cv::Mat> interpolatedFrames(cv::Mat previous_frame, cv::Mat current_frame, uchar frame_count);
 };
 
 #endif // SLOWMOTION_H

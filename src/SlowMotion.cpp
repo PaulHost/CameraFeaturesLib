@@ -12,8 +12,13 @@ cv::Mat calculateOpticalFlow(cv::Mat first, cv::Mat second) {
     return result;
 }
 
-cv::Mat interpolatedFrame(cv::Mat  cv::Mat interpolation_direction, double interpoltion_value) {
+void interpolateFrame(cv::Mat flow,cv::Mat previous_frame, cv::Mat& frame, double interpolation_value) {
     cv::Mat result;
+    flow.forEach<cv::Point2f>([&](cv::Point2f& direction, const int position[]) {
+        uchar x = std::round(position[0] + (direction.x * interpolation_value));
+        uchar y = std::round(position[1] + (direction.y * interpolation_value));
+        frame.at<cv::Point3_<uint8_t>>(x, y) += previous_frame.at<cv::Point3_<uint8_t>>(position[0], position[1]) * interpolation_value;
+    });
 
 }
 
@@ -30,10 +35,11 @@ std::vector<cv::Mat> SlowMotion::interpolatedFrames(cv::Mat previous_frame, cv::
     std::vector<cv::Mat> result(frame_count);
     double interpolation_value = 1 / frame_count;
 
-    for (uchar i = 0; i <= frame_count; i++) {
-
-
-
+    for (uchar i = 1; i <= frame_count; i++) {
+        cv::Mat frame(previous_frame.rows, previous_frame.cols, CV_8UC3,cv::Scalar(0, 0, 0));
+        interpolateFrame(forward_flow, previous_frame, frame, interpolation_value * i);
+        interpolateFrame(backward_flow, current_frame, frame, 1 - (interpolation_value * i));
+        result[i] = frame;
     }
 
     return result;
