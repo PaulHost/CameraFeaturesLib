@@ -3,14 +3,10 @@
 
 #include <iostream>
 #include <algorithm>
-#include <functional>
 
 #include <opencv2/opencv.hpp>
 
-class SlowMotion
-{
-private:
-
+class SlowMotion {
 public:
     std::vector<cv::Mat> interpolatedFrames(cv::Mat previous_frame, cv::Mat current_frame, uchar frame_count);
 };
