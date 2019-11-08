@@ -92,7 +92,8 @@ add_library(
         LibCam
         ${CMAKE_CURRENT_LIST_DIR}/src/SlowMotion.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/LongExposure.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/VideoManager.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/VideoInput.cpp
+        ${CMAKE_CURRENT_LIST_DIR}src/VideoOutput.cpp
 )
 
 target_include_directories(LibCam PUBLIC ${OPENCV_INSTALL_DIR}/include/opencv4)
