@@ -1,22 +1,21 @@
-#ifndef LONGEXPOSURE_H
-#define LONGEXPOSURE_H
+#ifndef LIBCAM_LONGEXPOSURE_H
+#define LIBCAM_LONGEXPOSURE_H
 
+#include "def_utils.h"
 #include <iostream>
 #include <algorithm>
 #include <numeric>
 #include <opencv2/opencv.hpp>
 
-typedef std::vector<cv::Mat> Frames;
-
 class LongExposure {
 private:
     u_long count;
 
-    cv::Mat everaged_frame;
+    cv::Mat averaged_frame;
 public:
     LongExposure(cv::Mat);
 
-    LongExposure(const Frames);
+    LongExposure(Frames);
 
     LongExposure *put(cv::Mat);
 
@@ -25,4 +24,4 @@ public:
     static cv::Mat processFrames(Frames);
 };
 
-#endif // LONGEXPOSURE_H
+#endif // LIBCAM_LONGEXPOSURE_H

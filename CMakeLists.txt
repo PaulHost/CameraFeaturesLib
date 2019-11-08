@@ -90,12 +90,23 @@ ExternalProject_Add(
 
 add_library(
         LibCam
-        ${CMAKE_CURRENT_LIST_DIR}/src/SlowMotion.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/MotionInterpolator.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/LongExposure.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/VideoInput.cpp
-        ${CMAKE_CURRENT_LIST_DIR}src/VideoOutput.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/VideoOutput.cpp
 )
 
+# Targets for library
 target_include_directories(LibCam PUBLIC ${OPENCV_INSTALL_DIR}/include/opencv4)
 target_link_libraries(LibCam opencv_world)
 add_dependencies(LibCam opencv)
+
+add_executable(
+        LibCamUsage
+        ${CMAKE_CURRENT_LIST_DIR}/sample/Main.cpp
+)
+
+# Targets for sample
+target_include_directories(LibCamUsage PUBLIC ${CMAKE_CURRENT_LIST_DIR}/sample)
+target_link_libraries(LibCamUsage LibCam opencv_world)
+

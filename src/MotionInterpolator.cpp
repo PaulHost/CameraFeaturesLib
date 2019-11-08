@@ -1,12 +1,12 @@
-#include "SlowMotion.h"
+#include "MotionInterpolator.h"
 
-cv::Mat getGrayScale(cv::Mat frame) {
+cv::Mat getGrayScale(const cv::Mat &frame) {
     cv::Mat gray_frame;
     cv::cvtColor(frame, gray_frame, cv::COLOR_BGR2GRAY);
     return gray_frame;
 }
 
-cv::Mat calculateOpticalFlow(cv::Mat first, cv::Mat second) {
+cv::Mat calculateOpticalFlow(const cv::Mat &first, cv::Mat second) {
     cv::Mat result;
     cv::calcOpticalFlowFarneback(first, second, result, 0.5, 3, 15, 3, 3, 1.2, 0);
     return result;
@@ -21,7 +21,7 @@ void interpolateFrame(cv::Mat flow, cv::Mat previous_frame, cv::Mat &frame, doub
     });
 }
 
-std::vector<cv::Mat> SlowMotion::interpolatedFrames(cv::Mat previous_frame, cv::Mat current_frame, uchar frame_count) {
+Frames MotionInterpolator::interpolatedFrames(cv::Mat previous_frame, cv::Mat current_frame, uchar frame_count) {
     cv::Mat previous_frame_gray = getGrayScale(previous_frame);
     cv::Mat current_frame_gray = getGrayScale(current_frame);
 
@@ -31,7 +31,7 @@ std::vector<cv::Mat> SlowMotion::interpolatedFrames(cv::Mat previous_frame, cv::
     cv::Mat forward_flow_step = forward_flow / frame_count;
     cv::Mat backward_flow_step = backward_flow / frame_count;
 
-    std::vector<cv::Mat> result(frame_count);
+    Frames result(frame_count);
     double interpolation_value = 1 / frame_count;
 
     for (uchar i = 1; i <= frame_count; i++) {
