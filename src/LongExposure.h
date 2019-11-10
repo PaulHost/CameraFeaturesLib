@@ -13,6 +13,8 @@ private:
 
     cv::Mat averaged_frame;
 public:
+    LongExposure();
+
     LongExposure(cv::Mat);
 
     LongExposure(Frames);

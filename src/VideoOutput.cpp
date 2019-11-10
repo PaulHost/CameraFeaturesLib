@@ -8,6 +8,10 @@ void VideoOutput::addFrame(const cv::Mat &frame) {
     writer.write(frame);
 }
 
+void VideoOutput::addFrames(const Frames &frames) {
+    writer.write(frames);
+}
+
 void VideoOutput::save() {
     writer.release();
 }
