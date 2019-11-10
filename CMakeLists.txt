@@ -98,7 +98,7 @@ add_library(
 
 # Targets for library
 target_include_directories(LibCam PUBLIC ${OPENCV_INSTALL_DIR}/include/opencv4)
-target_link_libraries(LibCam opencv_world)
+target_link_libraries(LibCam opencv_world pthread png tiff jpeg z jasper)
 target_link_directories(LibCam PUBLIC ${OPENCV_INSTALL_DIR}/lib)
 add_dependencies(LibCam opencv)
 
