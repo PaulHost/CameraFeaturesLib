@@ -99,6 +99,7 @@ add_library(
 # Targets for library
 target_include_directories(LibCam PUBLIC ${OPENCV_INSTALL_DIR}/include/opencv4)
 target_link_libraries(LibCam opencv_world)
+target_link_directories(LibCam PUBLIC ${OPENCV_INSTALL_DIR}/lib)
 add_dependencies(LibCam opencv)
 
 add_executable(
@@ -108,5 +109,6 @@ add_executable(
 
 # Targets for sample
 target_include_directories(LibCamUsage PUBLIC ${CMAKE_CURRENT_LIST_DIR}/sample)
-target_link_libraries(LibCamUsage LibCam opencv_world)
+target_link_libraries(LibCamUsage LibCam)
+add_dependencies(LibCam opencv LibCam)
 
