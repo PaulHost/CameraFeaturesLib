@@ -1,6 +1,7 @@
 include(ExternalProject)
 
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(LibCam LANGUAGES CXX)
 
@@ -8,8 +9,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(THIRDPARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/lib)
+
 set(OPENCV_INSTALL_DIR ${CMAKE_BINARY_DIR}/opencv)
 set(OPENCV_DIR ${THIRDPARTY_DIR}/opencv)
+
+set(FFMPEG_INSTALL_DIR ${CMAKE_BINARY_DIR}/ffmpeg)
+set(FFMPEG_DIR ${THIRDPARTY_DIR}/ffmpeg)
+
+set(OH264_INSTALL_DIR ${CMAKE_BINARY_DIR}/openh264)
+set(OH264_DIR ${THIRDPARTY_DIR}/openh264)
 
 ExternalProject_Add(
         opencv
@@ -19,42 +27,17 @@ ExternalProject_Add(
         -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
         #-DCPU_BASELINE:String=${OPENCV_CPU_BASELINE}
         -DENABLE_CXX11=ON
-        -DWITH_FFMPEG=OFF
         -DBUILD_opencv_world=ON
         -DCMAKE_CXX_STANDARD=14
         ### Enabled modules
-        -DBUILD_opencv_imgproc=ON
-        -DBUILD_opencv_video=ON
-        -DBUILD_opencv_highgui=ON
-        -DBUILD_opencv_imgcodecs=ON
-        -DBUILD_opencv_videoio=ON
-        ### Disabled modules
-        -DBUILD_opencv_dnn=OFF
-        -DBUILD_opencv_apps=OFF
-        -DBUILD_opencv_contrib=OFF
-        -DBUILD_opencv_flann=OFF
-        -DBUILD_opencv_features2d=OFF
-        -DBUILD_opencv_calib3d=OFF
-        -DBUILD_opencv_java=OFF
-        -DBUILD_opencv_java_bindings_generator=OFF
-        -DBUILD_opencv_ml=OFF
-        -DBUILD_opencv_objdetect=OFF
-        -DBUILD_opencv_photo=OFF
-        -DBUILD_opencv_python2=OFF
-        -DBUILD_opencv_shape=OFF
-        -DBUILD_opencv_stitching=OFF
-        -DBUILD_opencv_superres=OFF
-        -DBUILD_opencv_ts=OFF
-        -DBUILD_opencv_videostab=OFF
-        -DBUILD_opencv_python2=OFF
-        -DBUILD_opencv_viz=OFF
-        ###
+				-DBUILD_LIST=imgproc,video,highgui,imgcodecs,videoio,photo
+				###
         -DBUILD_JPEG=ON
         -DBUILD_JASPER=ON
         -DBUILD_PNG=ON
         -DBUILD_TIFF=ON
         -DBUILD_ZLIB=ON
-        -DWITH_FFMPEG=ON
+				-DWITH_FFMPEG=ON
         ###
         -DBUILD_DOCS=OFF
         -DBUILD_EXAMPLES=OFF
@@ -66,7 +49,9 @@ ExternalProject_Add(
         -DBUILD_TESTS=OFF
         -DBUILD_WITH_CAROTENE=OFF
         -DBUILD_WITH_DEBUG_INFO=OFF
+				-DWITH_1394=OFF
         -DWITH_CUDA=OFF
+				-DWITH_MFX=OFF
         -DWITH_CUFFT=OFF
         -DWITH_GSTREAMER=OFF
         -DWITH_IPP=OFF
@@ -82,33 +67,80 @@ ExternalProject_Add(
         -DWITH_OPENMP=OFF
         -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
         -DCMAKE_INSTALL_PREFIX:PATH=${OPENCV_INSTALL_DIR}
-        BUILD_BYPRODUCTS ${OPENCV_LIBS}
-        GIT_TAG 4.1.2
-        GIT_REPOSITORY https://github.com/opencv/opencv.git
-        GIT_PROGRESS ON
+)
+
+ExternalProject_Add(
+  ffmpeg
+	SOURCE_DIR ${FFMPEG_DIR}
+  CMAKE_ARGS
+	BUILD_IN_SOURCE ON
+	CONFIGURE_COMMAND git clean -f && PKG_CONFIG_PATH=${OH264_INSTALL_DIR}/lib/pkgconfig ./configure --disable-autodetect --enable-libopenh264 --disable-decoder=opus --disable-encoder=opus --enable-pic --prefix=${FFMPEG_INSTALL_DIR}
+	BUILD_COMMAND make -j10 && make install
+)
+
+add_dependencies(opencv ffmpeg)
+
+ExternalProject_Add(
+	openh264
+	SOURCE_DIR ${OH264_DIR}
+	BUILD_IN_SOURCE ON
+	CONFIGURE_COMMAND git clean -f
+	BUILD_COMMAND git clean -f && make -j10
+	INSTALL_COMMAND make PREFIX=${OH264_INSTALL_DIR} install 
+)
+
+add_dependencies(ffmpeg openh264)
+
+set_target_properties(opencv 
+	PROPERTIES 
+	pkgcfg_lib_FFMPEG_avcodec ${FFMPEG_INSTALL_DIR}/lib/libavcodec.a 
+	pkgcfg_lib_FFMPEG_avformat ${FFMPEG_INSTALL_DIR}/lib/libavformat.a
+	pkgcfg_lib_FFMPEG_avutil ${FFMPEG_INSTALL_DIR}/lib/libavutil.a
+	pkgcfg_lib_FFMPEG_swscale ${FFMPEG_INSTALL_DIR}/lib/libswscale.a
 )
 
 add_library(
-        LibCam
-        ${CMAKE_CURRENT_LIST_DIR}/src/MotionInterpolator.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/LongExposure.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/VideoInput.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/src/VideoOutput.cpp
+	LibCam
+	${CMAKE_CURRENT_LIST_DIR}/src/MotionInterpolator.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/LongExposure.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/VideoInput.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/VideoOutput.cpp
 )
 
 # Targets for library
-target_include_directories(LibCam PUBLIC ${OPENCV_INSTALL_DIR}/include/opencv4)
-target_link_libraries(LibCam opencv_world pthread png tiff jpeg z jasper)
-target_link_directories(LibCam PUBLIC ${OPENCV_INSTALL_DIR}/lib)
+target_include_directories(LibCam PUBLIC 
+	${OPENCV_DIR}/include 
+	${OPENCV_INSTALL_DIR}/include/opencv4
+)
+target_link_libraries(LibCam 
+	opencv_world
+	pthread 
+	libpng 
+	libtiff 
+	libjpeg-turbo 
+	zlib 
+	libjasper 
+	libprotobuf 
+	dl 
+	${FFMPEG_INSTALL_DIR}/lib/libavformat.a
+	${FFMPEG_INSTALL_DIR}/lib/libavcodec.a 
+	${FFMPEG_INSTALL_DIR}/lib/libavutil.a
+	${FFMPEG_INSTALL_DIR}/lib/libavfilter.a
+	${FFMPEG_INSTALL_DIR}/lib/libswscale.a
+	${FFMPEG_INSTALL_DIR}/lib/libavdevice.a
+	${OH264_INSTALL_DIR}/lib/libopenh264.a
+	) 
+target_link_directories(LibCam PUBLIC 
+	${OPENCV_INSTALL_DIR}/lib 
+	${OPENCV_INSTALL_DIR}/lib/opencv4/3rdparty
+)
 add_dependencies(LibCam opencv)
 
 add_executable(
-        LibCamUsage
-        ${CMAKE_CURRENT_LIST_DIR}/sample/Main.cpp
+	LibCamUsage
+  ${CMAKE_CURRENT_LIST_DIR}/sample/Main.cpp
 )
 
 # Targets for sample
 target_include_directories(LibCamUsage PUBLIC ${CMAKE_CURRENT_LIST_DIR}/sample)
 target_link_libraries(LibCamUsage LibCam)
-add_dependencies(LibCam opencv LibCam)
-

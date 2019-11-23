@@ -1,4 +1,4 @@
-#include "MotionInterpolator.h"
+#include "MotionInterpolator.h" 
 
 cv::Mat getGrayScale(const cv::Mat &frame) {
     cv::Mat gray_frame;
@@ -6,22 +6,21 @@ cv::Mat getGrayScale(const cv::Mat &frame) {
     return gray_frame;
 }
 
-cv::Mat calculateOpticalFlow(const cv::Mat &first, cv::Mat second) {
+cv::Mat calculateOpticalFlow(const cv::Mat &first, const cv::Mat& second) {
     cv::Mat result;
     cv::calcOpticalFlowFarneback(first, second, result, 0.5, 3, 15, 3, 3, 1.2, 0);
     return result;
 }
 
-void interpolateFrame(cv::Mat flow, cv::Mat previous_frame, cv::Mat &frame, double interpolation_value) {
-    flow.forEach<cv::Point2f>([&](cv::Point2f &direction, const int position[]) {
-        uchar x = std::round(position[0] + (direction.x * interpolation_value));
-        uchar y = std::round(position[1] + (direction.y * interpolation_value));
-        frame.at<cv::Point3_<uint8_t >>(x, y) +=
-                previous_frame.at<cv::Point3_<uint8_t >>(position[0], position[1]) * interpolation_value;
-    });
+void interpolateFrame(cv::Mat flow, const cv::Mat& previous_frame, cv::Mat &frame, double interpolation_value) {
+  flow.forEach<cv::Point2f>([&](cv::Point2f &direction, const int position[]) {
+    ulong x = std::clamp(static_cast<int>(std::round(position[0] + (direction.x * interpolation_value))), 0, flow.rows - 1);
+    ulong y = std::clamp(static_cast<int>(std::round(position[1] + (direction.y * interpolation_value))), 0, flow.cols - 1);
+    frame.at<cv::Point3_<uint8_t >>(x, y) += previous_frame.at<cv::Point3_<uint8_t >>(position[0], position[1]) * interpolation_value;
+  });
 }
 
-Frames MotionInterpolator::interpolatedFrames(cv::Mat previous_frame, cv::Mat current_frame, uchar frame_count) {
+Frames MotionInterpolator::interpolatedFrames(const cv::Mat& previous_frame, const cv::Mat& current_frame, uchar frame_count) {
     cv::Mat previous_frame_gray = getGrayScale(previous_frame);
     cv::Mat current_frame_gray = getGrayScale(current_frame);
 
@@ -31,17 +30,18 @@ Frames MotionInterpolator::interpolatedFrames(cv::Mat previous_frame, cv::Mat cu
     cv::Mat forward_flow_step = forward_flow / frame_count;
     cv::Mat backward_flow_step = backward_flow / frame_count;
 
-    Frames result(frame_count);
+    Frames result;
     double interpolation_value = 1 / frame_count;
 
     for (uchar i = 1; i <= frame_count; i++) {
         cv::Mat frame(previous_frame.rows, previous_frame.cols, CV_8UC3, cv::Scalar(0, 0, 0));
-        interpolateFrame(forward_flow, previous_frame, frame, interpolation_value * i);
-        interpolateFrame(backward_flow, current_frame, frame, 1 - (interpolation_value * i));
-        result[i] = frame;
+
+        interpolateFrame(forward_flow_step, previous_frame, frame, interpolation_value * i);
+        interpolateFrame(backward_flow_step, current_frame, frame, 1.0 - (interpolation_value * i));
+
+        result.push_back(frame);
     }
 
-    cv::medianBlur(result, result, 3);
 
     return result;
 }

@@ -26,13 +26,17 @@
 *.a
 *.lib
 /lib/*
+
 # Executables
 *.exe
 *.out
 *.app
 
+#tooling settings
+.ccls
+compile_commands.json
+
 # Folders
 .idea
-/build/
+/builds/
 /cmake-build-debug/
-/lib/*

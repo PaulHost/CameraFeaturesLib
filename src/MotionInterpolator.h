@@ -9,7 +9,7 @@
 
 class MotionInterpolator {
 public:
-    static Frames interpolatedFrames(cv::Mat previous_frame, cv::Mat current_frame, uchar frame_count);
+    static Frames interpolatedFrames(const cv::Mat& previous_frame, const cv::Mat& current_frame, uchar frame_count);
 };
 
 #endif // LIBCAM_MOTIONINTERPOLATOR_H

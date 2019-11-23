@@ -1,5 +1,10 @@
 #include "LongExposure.h"
 
+LongExposure::LongExposure() {
+    count = 0;
+    averaged_frame = cv::Mat();
+}
+
 LongExposure::LongExposure(const cv::Mat frame) {
     count = 1;
     averaged_frame = frame;
