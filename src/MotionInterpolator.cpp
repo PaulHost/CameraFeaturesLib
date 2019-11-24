@@ -1,6 +1,12 @@
 #include <opencl-c.h>
 #include "MotionInterpolator.h"
 
+cv::Mat copy(const cv::Mat& orgImage) {
+    cv::Mat image;
+    orgImage.copyTo(image);
+    return image;
+}
+
 cv::Mat blotter(const cv::Mat& orgImage) {
     cv::Mat image;
     cv::medianBlur(orgImage, image, 5);
@@ -44,8 +50,10 @@ Frames MotionInterpolator::interpolatedFrames(const cv::Mat& previous_frame, con
     Frames result;
     double interpolation_value = 1 / frame_count;
 
+    auto substrate =  blotter(previous_frame, current_frame);
+
     for (uchar i = 1; i <= frame_count; i++) {
-        cv::Mat frame = blotter(previous_frame, current_frame);
+        cv::Mat frame = copy(substrate);
 
         interpolateFrame(forward_flow_step, previous_frame, frame, interpolation_value * i);
         interpolateFrame(backward_flow_step, current_frame, frame, 1.0 - (interpolation_value * i));
@@ -64,9 +72,10 @@ Frames MotionInterpolator::interpolate(const cv::Mat &previous_frame, const cv::
     Frames result;
 
     double interpolation_value = 1 / frame_count;
+    auto substrate = blotter(current_frame);
 
     for (uchar i = 1; i <= frame_count; i++) {
-        cv::Mat frame = blotter(current_frame);
+        cv::Mat frame = copy(substrate);
         interpolateFrame(flow_step, previous_frame, frame, interpolation_value * i);
         result.push_back(frame);
     }
