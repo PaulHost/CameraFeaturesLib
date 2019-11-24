@@ -1,4 +1,15 @@
-#include "MotionInterpolator.h" 
+#include <opencl-c.h>
+#include "MotionInterpolator.h"
+
+cv::Mat blotter(const cv::Mat& orgImage) {
+    cv::Mat image;
+    cv::medianBlur(orgImage, image, 5);
+    return image;
+}
+
+cv::Mat blotter(const cv::Mat& first, const cv::Mat& second) {
+    return (blotter(first) + blotter(second)) / 2;
+}
 
 cv::Mat getGrayScale(const cv::Mat &frame) {
     cv::Mat gray_frame;
@@ -34,7 +45,7 @@ Frames MotionInterpolator::interpolatedFrames(const cv::Mat& previous_frame, con
     double interpolation_value = 1 / frame_count;
 
     for (uchar i = 1; i <= frame_count; i++) {
-        cv::Mat frame(previous_frame.rows, previous_frame.cols, CV_8UC3, cv::Scalar(0, 0, 0));
+        cv::Mat frame = blotter(previous_frame, current_frame);
 
         interpolateFrame(forward_flow_step, previous_frame, frame, interpolation_value * i);
         interpolateFrame(backward_flow_step, current_frame, frame, 1.0 - (interpolation_value * i));
@@ -42,6 +53,23 @@ Frames MotionInterpolator::interpolatedFrames(const cv::Mat& previous_frame, con
         result.push_back(frame);
     }
 
+
+    return result;
+}
+
+Frames MotionInterpolator::interpolate(const cv::Mat &previous_frame, const cv::Mat &current_frame, uchar frame_count) {
+    cv::Mat flow = calculateOpticalFlow(getGrayScale(previous_frame), getGrayScale(current_frame));
+    cv::Mat flow_step = flow / frame_count;
+
+    Frames result;
+
+    double interpolation_value = 1 / frame_count;
+
+    for (uchar i = 1; i <= frame_count; i++) {
+        cv::Mat frame = blotter(current_frame);
+        interpolateFrame(flow_step, previous_frame, frame, interpolation_value * i);
+        result.push_back(frame);
+    }
 
     return result;
 }
