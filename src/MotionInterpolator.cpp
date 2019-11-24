@@ -1,4 +1,3 @@
-#include <opencl-c.h>
 #include "MotionInterpolator.h"
 
 cv::Mat copy(const cv::Mat& orgImage) {

@@ -19,6 +19,8 @@ set(FFMPEG_DIR ${THIRDPARTY_DIR}/ffmpeg)
 set(OH264_INSTALL_DIR ${CMAKE_BINARY_DIR}/openh264)
 set(OH264_DIR ${THIRDPARTY_DIR}/openh264)
 
+message("OH264 INSTALL DIR ${OH264_INSTALL_DIR}")
+
 ExternalProject_Add(
         opencv
         SOURCE_DIR ${OPENCV_DIR}
@@ -85,8 +87,8 @@ ExternalProject_Add(
 	SOURCE_DIR ${OH264_DIR}
 	BUILD_IN_SOURCE ON
 	CONFIGURE_COMMAND git clean -f
-	BUILD_COMMAND git clean -f && make -j10
-	INSTALL_COMMAND make PREFIX=${OH264_INSTALL_DIR} install 
+	BUILD_COMMAND git clean -f && make -j10 PREFIX=${OH264_INSTALL_DIR} install
+	INSTALL_COMMAND echo oh264Done
 )
 
 add_dependencies(ffmpeg openh264)
